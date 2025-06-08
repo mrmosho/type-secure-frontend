@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}View File - {{ file.original_filename }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">View File</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-file"></i> {{ file.original_filename }}
+                    </h3>
+                    <div>
+                        {% if file.has_sensitive_data %}
+                            {% if current_user.is_admin %}
+                                <span class="badge bg-info me-2">
+                                    <i class="fas fa-shield-alt"></i> Admin Access
+                                </span>
+                            {% elif current_user.is_subscribed %}
+                                <span class="badge bg-success me-2">
+                                    <i class="fas fa-lock"></i> Protected Content
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning me-2">
+                                    <i class="fas fa-exclamation-triangle"></i> Sensitive Data
+                                </span>
+                            {% endif %}
+                        {% endif %}
+                        <div class="btn-group">
+                            <a href="{{ url_for('download_file', file_id=file.id) }}" class="btn btn-primary">
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                            {% if current_user.is_subscribed %}
+                                <a href="{{ url_for('file_history', file_id=file.id) }}" class="btn btn-info">
+                                    <i class="fas fa-history"></i> History
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="file-info mb-4">
+                        <p><strong>Uploaded:</strong> {{ file.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        <p><strong>Owner:</strong> {{ file.owner.email }}</p>
+                        {% if file.has_sensitive_data %}
+                            <p><strong>Sensitive Data Types:</strong> 
+                                {% for data_type in file.sensitive_data_types.split(',') %}
+                                    <span class="badge bg-warning me-1">{{ data_type }}</span>
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="file-content">
+                        <h4>File Content:</h4>
+                        {% if current_user.is_subscribed and file.has_sensitive_data %}
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-shield-alt"></i> Sensitive data is protected:
+                                {% for data_type in file.sensitive_data_types.split(',') %}
+                                    <span class="badge bg-info me-1">{{ data_type }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="border rounded p-3 bg-light">
+                            <pre class="mb-0" id="file-content">{{ content }}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if current_user.is_subscribed and sensitive_locations %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const content = document.getElementById('file-content');
+    const text = content.textContent;
+    let html = '';
+    let lastIndex = 0;
+
+    // Sort locations by start position
+    const locations = {{ sensitive_locations|tojson }};
+    locations.sort((a, b) => a[0] - b[0]);
+
+    // Highlight sensitive data
+    locations.forEach(([start, end, type]) => {
+        // Add text before the sensitive data
+        html += text.slice(lastIndex, start);
+        // Add highlighted sensitive data
+        html += `<span class="sensitive-data sensitive-${type}">${text.slice(start, end)}</span>`;
+        lastIndex = end;
+    });
+
+    // Add remaining text
+    html += text.slice(lastIndex);
+    content.innerHTML = html;
+});
+</script>
+
+<style>
+.sensitive-data {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-radius: 3px;
+    padding: 0 2px;
+}
+.sensitive-email { background-color: #d4edda; border-color: #c3e6cb; }
+.sensitive-phone { background-color: #f8d7da; border-color: #f5c6cb; }
+.sensitive-credit_card { background-color: #cce5ff; border-color: #b8daff; }
+.sensitive-ssn { background-color: #e2e3e5; border-color: #d6d8db; }
+</style>
+{% endif %}
+{% endblock %} 

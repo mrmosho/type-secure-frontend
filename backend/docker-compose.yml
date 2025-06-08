@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: file_sharing_backend
+    volumes:
+      - ./uploads:/app/uploads
+      - ./instance:/app/instance
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - FLASK_RUN_HOST=0.0.0.0
+    ports:
+      - "8080:5000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: file_sharing_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app_network
+    restart: unless-stopped
+
+networks:
+  app_network:
+    driver: bridge 

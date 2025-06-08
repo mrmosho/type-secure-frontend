@@ -1,0 +1,23 @@
+﻿{
+  "name": "type-secure",
+  "version": "1.0.0",
+  "description": "Sensitive Data Detection and Encryption Security System",
+  "workspaces": ["frontend"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && python main.py",
+    "build": "cd frontend && npm run build",
+    "install:all": "npm install && cd frontend && npm install && cd backend && pip install -r requirements.txt",
+    "start": "cd frontend && npm run preview",
+    "backend:install": "cd backend && pip install -r requirements.txt",
+    "frontend:install": "cd frontend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "python": ">=3.8.0"
+  }
+}

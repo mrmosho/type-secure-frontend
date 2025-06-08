@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <h1 class="display-4 mb-4">Welcome to Secure Vision Shield</h1>
+        <p class="lead mb-4">Your trusted guardian for file security and sensitive data protection.</p>
+        
+        <div class="row mt-5">
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <i class="fas fa-search fa-3x text-primary mb-3"></i>
+                        <h3>Smart Scanning</h3>
+                        <p>Automatically detect sensitive information in your files</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <i class="fas fa-lock fa-3x text-primary mb-3"></i>
+                        <h3>File Protection</h3>
+                        <p>Secure your files with military-grade encryption</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <i class="fas fa-user-shield fa-3x text-primary mb-3"></i>
+                        <h3>Access Control</h3>
+                        <p>Manage who can access your protected files</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-user-plus"></i> Get Started
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+            {% else %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-home"></i> Go to Dashboard
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

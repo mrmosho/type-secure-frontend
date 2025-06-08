@@ -1,0 +1,14 @@
+﻿{
+  "name": "type-secure",
+  "version": 2,
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "npm install && cd frontend && npm install",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://your-backend-url.herokuapp.com/api/$1"
+    }
+  ]
+}
