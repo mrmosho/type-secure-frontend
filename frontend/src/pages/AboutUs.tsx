@@ -30,8 +30,8 @@ const AboutUs: React.FC = () => {
       bio: 'Leading the team with expertise in security and software engineering. Prof. Ammar brings years of academic and industry experience to guide the project vision.',
       isSupervisor: true,
       links: {
-        email: 'ammar@example.com',
-        linkedin: '#'
+        email: 'ammar.hany@gmail.com.com',
+        
       }
     },
     {
@@ -41,7 +41,7 @@ const AboutUs: React.FC = () => {
       image: '/images/omar.jpg',
       bio: 'Responsible for overall project coordination and technical architecture. Omar specializes in secure system design and cryptography implementation.',
       links: {
-        github: '#',
+        github: 'https://github.com/mrmosho',
         linkedin: '#',
         email: 'omarhusam1711@gmail.com'
       }
