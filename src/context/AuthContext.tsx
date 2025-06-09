@@ -51,73 +51,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
     },
     register: async (name: string, email: string, password: string) => {
-      if (!rateLimiter.canAttempt()) {
-        throw new Error(`Please wait ${rateLimiter.getRemainingTime()} seconds before trying again.`);
-      }
-
       try {
-        console.log('Starting registration with:', { name, email });
+        console.log('Starting registration with:', { name, email })
         
-        // Validate input before sending
-        if (!email || !password || !name) {
-          throw new Error('All fields are required');
-        }
-
-        if (password.length < 6) {
-          throw new Error('Password must be at least 6 characters');
-        }
-
-        // Remove any existing session
-        await supabase.auth.signOut();
-
-        const { data, error } = await supabase.auth.signUp({
+        // First, create the user in Auth
+        const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { 
-              full_name: name 
-            }
-          }
-        });
+            data: {
+              name: name,
+            },
+          },
+        })
 
-        if (error) {
-          console.error('Registration error:', error);
-          
-          // Handle specific error cases
-          switch(true) {
-            case error.message.includes('rate limit'):
-              throw new Error('Too many attempts. Please try again later.');
-            case error.message.includes('already registered'):
-              throw new Error('This email is already registered.');
-            case error.message.includes('email'):
-              throw new Error('Invalid email address.');
-            default:
-              throw new Error('Registration failed. Please try again.');
-          }
+        if (authError) {
+          console.error('Auth error:', authError)
+          throw authError
         }
 
-        if (!data.user) {
-          throw new Error('Registration failed - no user data received');
+        if (!authData.user) {
+          throw new Error('No user data returned')
         }
 
-        // Create profile after successful registration
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email: email,
-            full_name: name,
-            updated_at: new Date().toISOString()
-          });
-
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-        }
-
-        return data;
-      } catch (error: any) {
-        console.error('Registration error in AuthContext:', error);
-        throw error;
+        console.log('Registration successful:', authData)
+        return authData
+      } catch (error) {
+        console.error('Registration error:', error)
+        throw error
       }
     },
     logout: async () => {

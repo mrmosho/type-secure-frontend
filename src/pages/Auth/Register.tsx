@@ -22,51 +22,30 @@ const Register: React.FC = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    if (!rateLimiter.canAttempt()) {
-      const remainingTime = rateLimiter.getRemainingTime();
-      toast({
-        variant: "destructive",
-        title: "Rate limit exceeded",
-        description: `Please wait ${remainingTime} seconds before trying again.`
-      });
-      setIsLoading(false);
-      return;
-    }
-
+    e.preventDefault()
+    setIsLoading(true)
+    
     try {
-      console.log('Starting registration with:', { email });
-      
-      if (!email.includes('@')) {
+      if (password !== confirmPassword) {
         toast({
-          variant: "destructive",
-          title: "Invalid email",
-          description: "Please enter a valid email address"
-        });
-        return;
+          title: "Error",
+          description: "Passwords do not match",
+          variant: "destructive"
+        })
+        return
       }
 
-      const result = await register(name, email, password);
-      console.log('Registration result:', result);
-
-      if (result?.user) {
-        toast({
-          title: "Registration successful!",
-          description: "Please check your email to confirm your account.",
-        });
-        navigate('/login');
-      }
+      await register(name, email, password)
+      navigate('/dashboard')
     } catch (error: any) {
-      console.error('Registration error:', error);
+      console.error('Registration error:', error)
       toast({
-        variant: "destructive",
         title: "Registration failed",
-        description: error.message || "An error occurred during registration"
-      });
+        description: error.message || "Something went wrong",
+        variant: "destructive"
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   };
 

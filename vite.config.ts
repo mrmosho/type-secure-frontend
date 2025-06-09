@@ -11,14 +11,6 @@ export default defineConfig(({ mode }) => {
     hasSupabaseUrl: !!env.VITE_SUPABASE_URL,
     hasSupabaseKey: !!env.VITE_SUPABASE_ANON_KEY
   })
-  
-  // Verify environment variables
-  const requiredEnvVars = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY']
-  for (const envVar of requiredEnvVars) {
-    if (!env[envVar]) {
-      throw new Error(`Missing required environment variable: ${envVar}`)
-    }
-  }
 
   return {
     plugins: [react()],
@@ -28,11 +20,13 @@ export default defineConfig(({ mode }) => {
       },
     },
     define: {
-      // Explicitly stringify all env variables
-      __SUPABASE_URL__: JSON.stringify(env.VITE_SUPABASE_URL),
-      __SUPABASE_ANON_KEY__: JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
+      // Use process.env as fallback for Vercel deployment
+      __SUPABASE_URL__: JSON.stringify(env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL),
+      __SUPABASE_ANON_KEY__: JSON.stringify(env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY),
       'import.meta.env': JSON.stringify({
         ...env,
+        VITE_SUPABASE_URL: env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+        VITE_SUPABASE_ANON_KEY: env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY,
         MODE: mode,
         DEV: mode === 'development'
       })
