@@ -16,6 +16,9 @@ export default {
           foreground: "hsl(var(--primary-foreground))",
         },
       },
+      borderColor: {
+        DEFAULT: "hsl(var(--border))"
+      }
     },
   },
   plugins: [],
