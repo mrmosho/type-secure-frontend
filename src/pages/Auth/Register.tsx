@@ -22,8 +22,8 @@ const Register: React.FC = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
     
     try {
       if (password !== confirmPassword) {
@@ -31,21 +31,33 @@ const Register: React.FC = () => {
           title: "Error",
           description: "Passwords do not match",
           variant: "destructive"
-        })
-        return
+        });
+        return;
       }
 
-      await register(name, email, password)
-      navigate('/dashboard')
+      const { user, session } = await register(name, email, password);
+      
+      if (!session) {
+        // Registration successful but needs email confirmation
+        toast({
+          title: "Check your email",
+          description: "We sent you a confirmation link. Please check your email to complete registration.",
+          duration: 6000,
+        });
+        navigate('/login');
+      } else {
+        // Auto-login successful
+        navigate('/dashboard');
+      }
     } catch (error: any) {
-      console.error('Registration error:', error)
+      console.error('Registration error:', error);
       toast({
         title: "Registration failed",
         description: error.message || "Something went wrong",
         variant: "destructive"
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   };
 
