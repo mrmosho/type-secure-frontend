@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
+import { RateLimiter } from "@/lib/utils/rateLimit";
+
+// Initialize rate limiter
+const COOLDOWN_DURATION = 60 * 1000; // 1 minute in milliseconds
+const rateLimiter = new RateLimiter(5, COOLDOWN_DURATION);
 
 interface AuthContextType {
   user: User | null;
@@ -13,12 +18,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const COOLDOWN_DURATION = 60 * 1000; // 1 minute in milliseconds
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [lastAttempt, setLastAttempt] = useState<number>(0);
 
   useEffect(() => {
     // Check active sessions and sets the user
@@ -41,10 +43,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isAuthenticated: !!user,
     isLoading,
     login: async (email: string, password: string) => {
+      if (!rateLimiter.canAttempt()) {
+        throw new Error(`Please wait ${rateLimiter.getRemainingTime()} seconds before trying again.`);
+      }
+      
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
     },
     register: async (name: string, email: string, password: string) => {
+      if (!rateLimiter.canAttempt()) {
+        throw new Error(`Please wait ${rateLimiter.getRemainingTime()} seconds before trying again.`);
+      }
+
       try {
         console.log('Starting registration with:', { name, email });
         

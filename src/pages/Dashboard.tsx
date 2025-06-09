@@ -5,7 +5,7 @@ import DetectionChart from "@/components/Dashboard/DetectionChart";
 import { Bell, Lock, Settings, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import SystemTray from "@/components/UI/SystemTray";
+import SystemTray from "@/components/ui/SystemTray";
 
 // Mock data for demonstration
 const chartData = [

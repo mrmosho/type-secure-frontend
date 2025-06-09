@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search } from "lucide-react";
 import DetectionItem, { Detection } from "@/components/Monitoring/DetectionItem";
-import SystemTray from "@/components/UI/SystemTray";
+import SystemTray from "@/components/ui/SystemTray";
 import { useToast } from "@/hooks/use-toast";
 
 // Mock data for demonstration

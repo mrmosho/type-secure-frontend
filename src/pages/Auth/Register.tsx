@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { Lock } from "lucide-react";
 import { RateLimiter } from '@/lib/utils/rateLimit';
-import { supabase } from '@/lib/supabase';
+
+const rateLimiter = new RateLimiter(5, 60000); // 5 attempts per minute
 
 const Register: React.FC = () => {
   const [name, setName] = useState("");
@@ -19,11 +20,21 @@ const Register: React.FC = () => {
   const { toast } = useToast();
   const { register } = useAuth();
   const navigate = useNavigate();
-  const rateLimiter = React.useMemo(() => new RateLimiter(3, 60000), []); // 3 attempts per minute
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    if (!rateLimiter.canAttempt()) {
+      const remainingTime = rateLimiter.getRemainingTime();
+      toast({
+        variant: "destructive",
+        title: "Rate limit exceeded",
+        description: `Please wait ${remainingTime} seconds before trying again.`
+      });
+      setIsLoading(false);
+      return;
+    }
 
     try {
       console.log('Starting registration with:', { email });
