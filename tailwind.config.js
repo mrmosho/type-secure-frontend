@@ -16,9 +16,8 @@ export default {
           foreground: "hsl(var(--primary-foreground))",
         },
       },
-      borderColor: {
-        DEFAULT: "hsl(var(--border))",
-        border: "hsl(var(--border))",
+      border: {
+        DEFAULT: "hsl(var(--border))"
       }
     },
   },
