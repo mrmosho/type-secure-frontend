@@ -17,7 +17,8 @@ export default {
         },
       },
       borderColor: {
-        DEFAULT: "hsl(var(--border))"
+        DEFAULT: "hsl(var(--border))",
+        border: "hsl(var(--border))",
       }
     },
   },
