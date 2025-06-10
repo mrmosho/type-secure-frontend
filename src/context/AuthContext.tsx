@@ -48,14 +48,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log('Starting registration with:', { name, email });
       
+      // Get the site URL from env or use production URL
+      const siteUrl = import.meta.env.VITE_APP_URL || 'https://type-secure.online';
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            name: name,
-          },
-          emailRedirectTo: `${import.meta.env.VITE_APP_URL || 'https://type-secure.online'}/auth/callback`,
+          data: { name },
+          emailRedirectTo: `${siteUrl}/auth/callback`,
         },
       });
 
@@ -78,14 +79,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error(`Please wait ${rateLimiter.getRemainingTime()} seconds before trying again.`);
       }
 
-      // First check if email is verified
-      const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers();
-      const user = users?.find(u => u.email === email);
-      
-      if (!user?.email_confirmed_at) {
-        throw new Error('Please verify your email before logging in.');
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -98,6 +91,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!data.session) {
         throw new Error('No session created');
+      }
+
+      // Check if email is verified using the user metadata
+      if (!data.user?.email_confirmed_at) {
+        throw new Error('Please verify your email before logging in.');
       }
 
       console.log('Login successful:', data);

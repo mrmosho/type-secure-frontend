@@ -6,36 +6,29 @@ export default function AuthCallback() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth event:', event);
-      if (event === 'SIGNED_IN') {
-        // Create profile after email confirmation
-        if (session?.user) {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .upsert({
-              id: session.user.id,
-              email: session.user.email,
-              updated_at: new Date().toISOString(),
-            });
+    const handleAuthCallback = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
 
-          if (profileError) console.error('Profile creation error:', profileError);
+        if (session) {
+          navigate('/dashboard');
+        } else {
+          navigate('/login');
         }
-        navigate('/dashboard');
+      } catch (error) {
+        console.error('Error in auth callback:', error);
+        navigate('/login');
       }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
     };
+
+    handleAuthCallback();
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-pulse text-center">
-        <h1 className="text-2xl font-bold">Verifying your account...</h1>
-        <p className="mt-2 text-muted-foreground">Please wait while we confirm your email.</p>
-      </div>
+    <div className="flex min-h-screen items-center justify-center">
+      <p className="text-muted-foreground">Verifying your email...</p>
     </div>
   );
 }
