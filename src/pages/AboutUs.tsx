@@ -25,7 +25,7 @@ const teamMembers: TeamMember[] = [
       id: 1,
       name: 'Prof. Hany Ammar',
       role: 'Project Supervisor',
-      image: '/team/hany.jpg',
+      image: '/team/dr hany.jpeg',
       bio: 'Leading the team with expertise in security and software engineering. Prof. Ammar brings years of academic and industry experience to guide the project vision.',
       isSupervisor: true,
       links: {
@@ -49,7 +49,7 @@ const teamMembers: TeamMember[] = [
       id: 3,
       name: 'Amr Mohamed',
       role: 'Frontend Developer',
-      image: '/images/amr.jpg',
+      image: '/team/amr.jpg',
       bio: 'Crafting the user interface with a focus on usability and accessibility. Amr is passionate about creating intuitive security tools for non-technical users.',
       links: {
         github: '#',
@@ -61,7 +61,7 @@ const teamMembers: TeamMember[] = [
       id: 4,
       name: 'Marwan Mohamed',
       role: 'Security Specialist',
-      image: '/images/marwan.png',
+      image: '/team/marwan.png',
       bio: 'Focused on encryption algorithms and detection patterns. Marwan ensures that the system provides reliable protection against evolving security threats.',
       links: {
         github: '#',
@@ -73,7 +73,7 @@ const teamMembers: TeamMember[] = [
       id: 5,
       name: 'Ahmed Ali',
       role: 'Backend Developer',
-      image: '/images/ahmed.jpg',
+      image: '/team/ahmed.jpg',
       bio: 'Building the robust backend infrastructure that powers our sensitive data detection engine. Ahmed specializes in scalable and secure API development.',
       links: {
         github: '#',
@@ -121,7 +121,7 @@ const AboutUs: React.FC = () => {
               .map(member => (
                 <HoverCard key={member.id}>
                   <HoverCardTrigger asChild>
-                    <Card className="max-w-md group hover:shadow-lg transition-all duration-300 border-primary/20">
+                    <Card className="max-w-md group hover:shadow-lg transition-all duration-300 border-primary/20 bg-background">
                       <CardHeader className="text-center">
                         <div className="relative w-32 h-32 mx-auto mb-4">
                           <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
@@ -129,6 +129,7 @@ const AboutUs: React.FC = () => {
                             src={member.image} 
                             alt={member.name}
                             className="rounded-full w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500"
+                            loading="lazy"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.src = '/team/placeholder.jpg';
@@ -158,7 +159,7 @@ const AboutUs: React.FC = () => {
                       </CardFooter>
                     </Card>
                   </HoverCardTrigger>
-                  <HoverCardContent className="w-80">
+                  <HoverCardContent className="w-80 bg-background border shadow-lg z-50">
                     <div className="space-y-2">
                       <h4 className="text-sm font-semibold">{member.name}</h4>
                       <p className="text-sm text-muted-foreground">{member.role}</p>
@@ -179,7 +180,7 @@ const AboutUs: React.FC = () => {
               .map(member => (
                 <HoverCard key={member.id}>
                   <HoverCardTrigger asChild>
-                    <Card className="group hover:scale-105 hover:shadow-lg transition-all duration-300">
+                    <Card className="group hover:scale-105 hover:shadow-lg transition-all duration-300 bg-background relative z-10">
                       <CardHeader className="text-center">
                         <div className="relative w-24 h-24 mx-auto mb-4">
                           <div className="absolute inset-0 rounded-full border-2 border-muted" />
@@ -187,6 +188,7 @@ const AboutUs: React.FC = () => {
                             src={member.image} 
                             alt={member.name}
                             className="rounded-full w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500"
+                            loading="lazy"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.src = '/team/placeholder.jpg';
@@ -220,7 +222,7 @@ const AboutUs: React.FC = () => {
                       </CardFooter>
                     </Card>
                   </HoverCardTrigger>
-                  <HoverCardContent className="w-80">
+                  <HoverCardContent className="w-80 bg-background border shadow-lg z-50">
                     <div className="space-y-2">
                       <h4 className="text-sm font-semibold">{member.name}</h4>
                       <p className="text-sm text-muted-foreground">{member.role}</p>
