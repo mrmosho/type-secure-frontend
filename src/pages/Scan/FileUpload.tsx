@@ -6,7 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Upload, Loader2, FileText, FileIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { api } from "@/utils/api";
+import { api } from "@/lib/api";
 
 export function FileUpload() {
   const [isUploading, setIsUploading] = useState(false);
