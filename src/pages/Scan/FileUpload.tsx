@@ -19,7 +19,7 @@ export function FileUpload() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch(`${https://api.type-secure.online}/api/detect/file`, {
+        const response = await fetch("https://api.type-secure.online/api/detect/file", {
           method: "POST",
           body: formData,
         });
