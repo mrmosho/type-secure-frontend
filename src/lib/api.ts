@@ -50,6 +50,9 @@ export const api = {
     }
   },
 
+
+
+  
   async saveDetectionResult(result: DetectionResponse) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
