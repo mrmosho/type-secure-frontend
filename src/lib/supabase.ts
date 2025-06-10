@@ -1,22 +1,37 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from './database.types'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please check your .env file.')
+  throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    autoRefreshToken: true,
   }
 })
 
-// Helper function to check if error is a Supabase error
-export const isSupabaseError = (error: any) => {
-  return error?.message && error?.status
+// Type declaration for Supabase tables
+export type Database = {
+  public: {
+    tables: {
+      detections: {
+        Row: {
+          id: string
+          user_id: string
+          input_text: string
+          is_sensitive: boolean
+          confidence: number
+          detected_types: string[]
+          processed_at: string
+          created_at?: string
+        }
+        Insert: Omit<DetectionRow, 'id' | 'created_at'>
+        Update: Partial<DetectionRow>
+      }
+    }
+  }
 }
