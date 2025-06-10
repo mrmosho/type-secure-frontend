@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -93,30 +94,18 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-
-  /* Add mobile touch handling for cards */
-  .card {
-    -webkit-tap-highlight-color: transparent;
-    touch-action: pan-y;
-  }
 }
 
-@layer components {
-  .ts-gradient-purple {
-    @apply bg-gradient-to-r from-ts-purple-600 to-ts-purple-500;
-  }
+.ts-gradient-purple {
+  @apply bg-gradient-to-r from-ts-purple-600 to-ts-purple-500;
+}
 
-  .ts-gradient-pink {
-    @apply bg-gradient-to-r from-ts-pink-600 to-ts-pink-500;
-  }
+.ts-gradient-pink {
+  @apply bg-gradient-to-r from-ts-pink-600 to-ts-pink-500;
+}
 
-  .ts-gradient-primary {
-    @apply bg-gradient-to-r from-ts-purple-500 via-ts-purple-400 to-ts-pink-400;
-  }
-
-  .dark .ts-gradient-primary {
-    @apply bg-gradient-to-r from-ts-purple-500 via-ts-purple-400 to-ts-pink-400;
-  }
+.ts-gradient-primary {
+  @apply bg-gradient-to-r from-ts-purple-600 via-ts-purple-500 to-ts-pink-500;
 }
 
 @keyframes pulse-border {
@@ -157,4 +146,8 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.dark .ts-gradient-primary {
+  @apply bg-gradient-to-r from-ts-purple-500 via-ts-purple-400 to-ts-pink-400;
 }

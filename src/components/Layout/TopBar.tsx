@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useTheme } from 'next-themes';
 import { Sun, Moon, Bell, User, Settings, LogOut, X, Check, AlertTriangle, Info } from 'lucide-react';
@@ -38,6 +37,7 @@ const TopBar: React.FC<TopBarProps> = ({ theme: propTheme, toggleTheme: propTogg
   const [securityStatus, setSecurityStatus] = React.useState<SecurityStatus>('Protected');
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: '1',
@@ -157,7 +157,7 @@ const TopBar: React.FC<TopBarProps> = ({ theme: propTheme, toggleTheme: propTogg
   };
 
   return (
-    <div className="h-16 border-b flex items-center justify-between px-4 bg-background">
+    <div className="h-16 border-b flex items-center justify-between px-4 bg-background relative z-40">
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">
           <div className={`w-2 h-2 rounded-full ${getStatusColor()}`}></div>
@@ -185,7 +185,7 @@ const TopBar: React.FC<TopBarProps> = ({ theme: propTheme, toggleTheme: propTogg
               )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
+          <DropdownMenuContent align="end" className="w-80 z-50">
             <DropdownMenuLabel className="flex justify-between items-center">
               <span>Notifications</span>
               {notifications.length > 0 && (
@@ -255,7 +255,7 @@ const TopBar: React.FC<TopBarProps> = ({ theme: propTheme, toggleTheme: propTogg
               {userInitials}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-56 z-50">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="cursor-pointer" onClick={navigateToDashboard}>

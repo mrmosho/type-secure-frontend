@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,8 +18,9 @@ import Notifications from "./pages/Notifications";
 import Pricing from "./pages/Pricing";
 import TryUs from "./pages/TryUs";
 import AboutUs from "./pages/AboutUs";
+import Scans from "./pages/Scans";
+import Upgrade from "./pages/Upgrade";
 import NotFound from "./pages/NotFound";
-import AuthCallback from '@/pages/Auth/AuthCallback';
 
 // Protected route component that redirects to login if not authenticated
 import { useAuth } from "./context/AuthContext";
@@ -85,6 +87,17 @@ const App = () => (
             </Route>
             
             <Route 
+              path="/scans" 
+              element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Scans />} />
+            </Route>
+            
+            <Route 
               path="/settings" 
               element={
                 <ProtectedRoute>
@@ -106,7 +119,16 @@ const App = () => (
               <Route index element={<Notifications />} />
             </Route>
             
-            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route 
+              path="/upgrade" 
+              element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Upgrade />} />
+            </Route>
             
             <Route path="*" element={<NotFound />} />
           </Routes>
