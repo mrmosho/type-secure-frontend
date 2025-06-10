@@ -1,6 +1,12 @@
 import { toast } from '@/components/ui/use-toast';
-import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+
+const API_BASE_URL = 'https://api.type-secure.online';
+
+interface DetectionRequest {
+  text: string;
+  // Add other fields as required by your API
+}
 
 interface DetectionResponse {
   is_sensitive: boolean;
@@ -9,133 +15,143 @@ interface DetectionResponse {
   processed_text: string;
 }
 
-interface DetectionRequest {
-  text: string;
-  sensitivity?: number;
-  detection_types?: string[];
-}
-
-export class APIError extends Error {
-  constructor(public status: number, message: string) {
-    super(message);
-  }
-}
-
-// TEMPORARY FIX: Hardcode the HTTPS URL to bypass caching
-const API_BASE_URL = 'https://api.type-secure.online';
-
 export const api = {
+  async getAuthHeaders() {
+    const { data: { session } } = await supabase.auth.getSession();
+    return {
+      'Authorization': `Bearer ${session?.access_token}`,
+      'Content-Type': 'application/json',
+    };
+  },
+
   async detect(data: DetectionRequest): Promise<DetectionResponse> {
     try {
-      console.log('🔍 Making detection request:', data);
+      const headers = await this.getAuthHeaders();
       
       const response = await fetch(`${API_BASE_URL}/api/detect`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          ...headers,
+          'Cache-Control': 'no-cache',
         },
-        credentials: 'include', // Add this for CORS
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new APIError(response.status, await response.text());
+        const errorText = await response.text();
+        console.error('Detection failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
+        throw new Error(`Detection failed: ${errorText}`);
       }
 
       const result = await response.json();
-      // Save detection result
-      await this.saveDetectionResult(result);
+      
+      // Validate response structure
+      if (!this.isValidDetectionResponse(result)) {
+        throw new Error('Invalid response format from API');
+      }
+
+      // Save to database immediately
+      try {
+        await this.saveDetectionResult(result);
+      } catch (dbError) {
+        console.error('Failed to save to database:', dbError);
+        // Continue even if database save fails
+      }
+
       return result;
     } catch (error) {
-      console.error('API Error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Detection failed",
+        variant: "destructive",
+      });
       throw error;
     }
   },
 
   async uploadFile(file: File): Promise<DetectionResponse> {
     try {
-      console.log('📤 Uploading file:', file.name);
+      const headers = await this.getAuthHeaders();
       const formData = new FormData();
       formData.append('file', file);
 
       const response = await fetch(`${API_BASE_URL}/api/detect/file`, {
         method: 'POST',
         headers: {
+          ...headers,
           'Accept': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
         },
-        credentials: 'include',
         body: formData,
       });
 
-      console.log('📥 Upload response status:', response.status);
-      
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Upload error response:', errorText);
-        if (response.status === 413) {
-          throw new APIError(413, 'File too large (max 10MB)');
-        }
-        throw new APIError(response.status, errorText || 'File upload failed');
+        console.error('File upload failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
+        throw new Error(`File upload failed: ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('📊 Upload result:', result);
       
-      // Store the result in the database with file info
+      if (!this.isValidDetectionResponse(result)) {
+        throw new Error('Invalid response format from API');
+      }
+
       await this.saveDetectionResult({
         ...result,
         processed_text: `File: ${file.name}`,
-        file_type: file.type,
-        file_size: file.size,
       });
 
       return result;
     } catch (error) {
-      console.error('File upload error:', error);
+      toast({
+        title: "Upload Failed",
+        description: error instanceof Error ? error.message : "File upload failed",
+        variant: "destructive",
+      });
       throw error;
     }
   },
 
-  async saveDetectionResult(result: DetectionResponse) {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.warn('No authenticated user found');
-        return;
-      }
+  isValidDetectionResponse(data: any): data is DetectionResponse {
+    return (
+      typeof data === 'object' &&
+      'is_sensitive' in data &&
+      'confidence' in data &&
+      'detected_types' in data &&
+      'processed_text' in data &&
+      Array.isArray(data.detected_types)
+    );
+  },
 
-      console.log('💾 Saving detection result to database:', {
+  async saveDetectionResult(result: DetectionResponse): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.warn('Cannot save result: No authenticated user');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('detections')
+      .insert({
         user_id: user.id,
-        result,
+        input_text: result.processed_text,
+        is_sensitive: result.is_sensitive,
+        confidence: result.confidence,
+        detected_types: result.detected_types,
+        processed_at: new Date().toISOString(),
       });
 
-      const { error } = await supabase
-        .from('detections')
-        .insert({
-          user_id: user.id,
-          input_text: result.processed_text,
-          is_sensitive: result.is_sensitive,
-          confidence: result.confidence,
-          detected_types: result.detected_types,
-          processed_at: new Date().toISOString(),
-          file_metadata: 'file_type' in result ? {
-            type: result.file_type,
-            size: result.file_size
-          } : null
-        });
-
-      if (error) {
-        console.error('Database error:', error);
-        throw error;
-      }
-
-      console.log('✅ Detection result saved successfully');
-    } catch (error) {
-      console.error('Failed to save detection result:', error);
-      // Don't throw here - we don't want to fail the entire operation
-      // if database save fails
+    if (error) {
+      console.error('Database save failed:', error);
+      throw error;
     }
   }
 };
