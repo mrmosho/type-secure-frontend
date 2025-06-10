@@ -102,16 +102,7 @@ const Upgrade: React.FC = () => {
             Get in touch with our team for more information about future pricing and features.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button variant="outline" className="flex-1">
-              Contact Support
-            </Button>
-            <Button variant="outline" className="flex-1">
-              View Roadmap
-            </Button>
-          </div>
-        </CardContent>
+        
       </Card>
     </div>
   );
