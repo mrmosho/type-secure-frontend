@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { createClient } from '@supabase/supabase-js';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 interface User {
   id: string;
@@ -32,9 +32,17 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  
   const supabase = createClient(
     import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
+    import.meta.env.VITE_SUPABASE_ANON_KEY,
+    {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    }
   );
 
   useEffect(() => {
@@ -71,25 +79,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
-    
     try {
-      // Mock API call - would be replaced with actual auth API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      // Simulate successful login
-      const mockUser = {
-        id: "1",
-        name: "Test User",
-        email: email,
-      };
-      
-      // Store token in local storage
-      localStorage.setItem("ts-auth-token", "mock-jwt-token");
-      
-      setUser(mockUser);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (!data.session) {
+        throw new Error('No session created');
+      }
+
+      setUser({
+        id: data.user.id,
+        email: data.user.email!,
+        name: data.user.user_metadata.name || 'Unknown User',
+        avatarUrl: data.user.user_metadata.avatar_url
+      });
     } catch (error) {
       console.error("Login failed:", error);
-      throw new Error("Invalid email or password");
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -97,33 +107,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (name: string, email: string, password: string) => {
     setIsLoading(true);
-    
     try {
-      // Mock API call - would be replaced with actual registration API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      // Simulate successful registration and auto-login
-      const mockUser = {
-        id: "1",
-        name: name,
-        email: email,
-      };
-      
-      // Store token in local storage
-      localStorage.setItem("ts-auth-token", "mock-jwt-token");
-      
-      setUser(mockUser);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) throw error;
+
+      // Don't set user here - wait for email verification
+      return data;
     } catch (error) {
       console.error("Registration failed:", error);
-      throw new Error("Registration failed. Please try again.");
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("ts-auth-token");
-    setUser(null);
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setUser(null);
+    } catch (error) {
+      console.error("Logout failed:", error);
+      throw error;
+    }
   };
 
   const forgotPassword = async (email: string) => {

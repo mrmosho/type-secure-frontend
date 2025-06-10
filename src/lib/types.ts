@@ -1,4 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from './database.types'
 
 export interface AuthUser {
   id: string
@@ -42,4 +43,11 @@ export interface PaginatedResponse<T> {
   total: number
   page: number
   limit: number
+}
+
+export type Tables = Database['public']['Tables']
+
+export interface AuthResponse {
+  user: User | null;
+  session: Session | null;
 }
