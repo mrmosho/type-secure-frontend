@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TextInput } from "./TextInput";
-import { FileUpload } from "./FileUpload";
-import { ScanHistory } from "./ScanHistory";
+import { TextInput } from "./Scan/TextInput";
+import { FileUpload } from "./Scan/FileUpload";
+import { ScanHistory } from "./Scan/ScanHistory";
 
 export default function Scans() {
   const [activeTab, setActiveTab] = useState("text");
