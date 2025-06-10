@@ -5,7 +5,6 @@ const API_BASE_URL = 'https://api.type-secure.online';
 
 interface DetectionRequest {
   text: string;
-  // Add other fields as required by your API
 }
 
 interface DetectionResponse {
@@ -16,24 +15,14 @@ interface DetectionResponse {
 }
 
 export const api = {
-  async getAuthHeaders() {
-    const { data: { session } } = await supabase.auth.getSession();
-    return {
-      'Authorization': `Bearer ${session?.access_token}`,
-      'Content-Type': 'application/json',
-    };
-  },
-
   async detect(data: DetectionRequest): Promise<DetectionResponse> {
     try {
-      const headers = await this.getAuthHeaders();
-      
       const response = await fetch(`${API_BASE_URL}/api/detect`, {
         method: 'POST',
         headers: {
-          ...headers,
-          'Cache-Control': 'no-cache',
+          'Content-Type': 'application/json',
         },
+        credentials: 'include', // Add this for CORS
         body: JSON.stringify(data),
       });
 
@@ -49,21 +38,16 @@ export const api = {
 
       const result = await response.json();
       
-      // Validate response structure
       if (!this.isValidDetectionResponse(result)) {
         throw new Error('Invalid response format from API');
       }
 
       // Save to database immediately
-      try {
-        await this.saveDetectionResult(result);
-      } catch (dbError) {
-        console.error('Failed to save to database:', dbError);
-        // Continue even if database save fails
-      }
-
+      await this.saveDetectionResult(result);
       return result;
+
     } catch (error) {
+      console.error('API Error:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Detection failed",
