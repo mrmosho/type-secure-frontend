@@ -20,25 +20,24 @@ interface TeamMember {
   };
 }
 
-const AboutUs: React.FC = () => {
-  const teamMembers: TeamMember[] = [
+const teamMembers: TeamMember[] = [
     {
       id: 1,
       name: 'Prof. Hany Ammar',
       role: 'Project Supervisor',
-      image: '/images/dr hany.jpeg',
+      image: '/team/hany.jpg',
       bio: 'Leading the team with expertise in security and software engineering. Prof. Ammar brings years of academic and industry experience to guide the project vision.',
       isSupervisor: true,
       links: {
-        email: 'ammar@example.com',
-        linkedin: '#'
+        email: 'hammar@mail.wvu.edu',
+        linkedin: 'https://www.linkedin.com/in/hany-ammar-69b4a516'
       }
     },
     {
       id: 2,
       name: 'Omar Husam',
       role: 'Project Lead',
-      image: '/images/omar.jpg',
+      image: '/team/omar.jpg',
       bio: 'Responsible for overall project coordination and technical architecture. Omar specializes in secure system design and cryptography implementation.',
       links: {
         github: 'https://github.com/mrmosho',
@@ -84,6 +83,7 @@ const AboutUs: React.FC = () => {
     },
   ];
 
+const AboutUs: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -121,13 +121,18 @@ const AboutUs: React.FC = () => {
               .map(member => (
                 <HoverCard key={member.id}>
                   <HoverCardTrigger asChild>
-                    <Card className="max-w-md group hover:shadow-lg transition-all duration-300 border-primary/20 cursor-pointer">
+                    <Card className="max-w-md group hover:shadow-lg transition-all duration-300 border-primary/20">
                       <CardHeader className="text-center">
-                        <div className="w-32 h-32 mx-auto rounded-full overflow-hidden mb-4 border-4 border-primary/20 grayscale group-hover:grayscale-0 transition-all duration-500">
+                        <div className="relative w-32 h-32 mx-auto mb-4">
+                          <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
                           <img 
                             src={member.image} 
                             alt={member.name}
-                            className="w-full h-full object-cover"
+                            className="rounded-full w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/team/placeholder.jpg';
+                            }}
                           />
                         </div>
                         <Badge variant="outline" className="bg-primary/10 mb-2 mx-auto w-fit">
@@ -174,13 +179,18 @@ const AboutUs: React.FC = () => {
               .map(member => (
                 <HoverCard key={member.id}>
                   <HoverCardTrigger asChild>
-                    <Card className="group hover:scale-105 hover:shadow-lg transition-all duration-300 cursor-pointer">
+                    <Card className="group hover:scale-105 hover:shadow-lg transition-all duration-300">
                       <CardHeader className="text-center">
-                        <div className="w-24 h-24 mx-auto rounded-full overflow-hidden mb-4 border-2 border-muted grayscale group-hover:grayscale-0 transition-all duration-500">
+                        <div className="relative w-24 h-24 mx-auto mb-4">
+                          <div className="absolute inset-0 rounded-full border-2 border-muted" />
                           <img 
                             src={member.image} 
                             alt={member.name}
-                            className="w-full h-full object-cover"
+                            className="rounded-full w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/team/placeholder.jpg';
+                            }}
                           />
                         </div>
                         <CardTitle className="text-lg">{member.name}</CardTitle>
