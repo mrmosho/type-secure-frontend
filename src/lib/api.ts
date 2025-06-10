@@ -50,24 +50,67 @@ export const api = {
     }
   },
 
+  async uploadFile(file: File): Promise<DetectionResponse> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
 
-
-  
-  async saveDetectionResult(result: DetectionResponse) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    const { error } = await supabase
-      .from('detections')
-      .insert({
-        user_id: user.id,
-        input_text: result.processed_text,
-        is_sensitive: result.is_sensitive,
-        confidence: result.confidence,
-        detected_types: result.detected_types,
-        processed_at: new Date().toISOString()
+      const response = await fetch(`${API_BASE_URL}/api/detect/file`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+        },
+        body: formData,
+        credentials: 'include',
       });
 
-    if (error) throw error;
+      if (!response.ok) {
+        if (response.status === 413) {
+          throw new APIError(413, 'File too large (max 10MB)');
+        }
+        throw new APIError(response.status, 'File upload failed');
+      }
+
+      const result = await response.json();
+      
+      // Store the result in the database
+      await this.saveDetectionResult({
+        ...result,
+        processed_text: `File: ${file.name}`,
+      });
+
+      return result as DetectionResponse;
+    } catch (error) {
+      console.error('File upload error:', error);
+      throw error;
+    }
+  },
+
+  async saveDetectionResult(result: DetectionResponse) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('detections')
+        .insert({
+          user_id: user.id,
+          input_text: result.processed_text,
+          is_sensitive: result.is_sensitive,
+          confidence: result.confidence,
+          detected_types: result.detected_types,
+          processed_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+
+      console.log('Detection result saved to database');
+    } catch (error) {
+      console.error('Failed to save detection result:', error);
+      throw error;
+    }
   }
 };
