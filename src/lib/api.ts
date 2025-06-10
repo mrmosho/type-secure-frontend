@@ -21,13 +21,19 @@ export class APIError extends Error {
   }
 }
 
+// TEMPORARY FIX: Hardcode the HTTPS URL to bypass caching
+const API_BASE_URL = 'https://api.type-secure.online';
+
 export const api = {
   async detect(data: DetectionRequest): Promise<DetectionResponse> {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/detect`, {
+      console.log('🔍 Using API URL:', API_BASE_URL);
+      
+      const response = await fetch(`${API_BASE_URL}/api/detect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
         },
         body: JSON.stringify(data),
       });

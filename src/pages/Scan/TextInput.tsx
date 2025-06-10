@@ -23,7 +23,7 @@ export function TextInput() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/detect`, {
+      const response = await fetch(`${https://api.type-secure.online}/api/detect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
