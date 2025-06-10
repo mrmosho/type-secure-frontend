@@ -1,7 +1,6 @@
 import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabase';
 
-const API_BASE_URL = 'https://api.type-secure.online';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface DetectionRequest {
   text?: string;
@@ -18,22 +17,23 @@ interface DetectionResponse {
 export const api = {
   async detect(data: DetectionRequest): Promise<DetectionResponse> {
     try {
-      let body: FormData | string;
-      const headers: Record<string, string> = {};
+      let requestBody: { text: string };
 
       if (data.file) {
-        body = new FormData();
-        body.append('file', data.file);
+        // Read file content as text
+        const text = await data.file.text();
+        requestBody = { text };
       } else {
-        body = JSON.stringify({ text: data.text });
-        headers['Content-Type'] = 'application/json';
+        requestBody = { text: data.text || '' };
       }
 
       const response = await fetch(`${API_BASE_URL}/api/detect`, {
         method: 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+        },
         credentials: 'include',
-        body,
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -48,17 +48,10 @@ export const api = {
 
       const result = await response.json();
       
-      if (!this.isValidDetectionResponse(result)) {
-        throw new Error('Invalid response format from API');
+      // Add file metadata to result if it's a file
+      if (data.file) {
+        result.processed_text = `File: ${data.file.name}`;
       }
-
-      // Save to database with appropriate text
-      await this.saveDetectionResult({
-        ...result,
-        processed_text: data.file 
-          ? `File: ${data.file.name}`
-          : result.processed_text,
-      });
 
       return result;
     } catch (error) {
@@ -68,41 +61,6 @@ export const api = {
         description: error instanceof Error ? error.message : "Detection failed",
         variant: "destructive",
       });
-      throw error;
-    }
-  },
-
-  isValidDetectionResponse(data: any): data is DetectionResponse {
-    return (
-      typeof data === 'object' &&
-      'is_sensitive' in data &&
-      'confidence' in data &&
-      'detected_types' in data &&
-      'processed_text' in data &&
-      Array.isArray(data.detected_types)
-    );
-  },
-
-  async saveDetectionResult(result: DetectionResponse): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.warn('Cannot save result: No authenticated user');
-      return;
-    }
-
-    const { error } = await supabase
-      .from('detections')
-      .insert({
-        user_id: user.id,
-        input_text: result.processed_text,
-        is_sensitive: result.is_sensitive,
-        confidence: result.confidence,
-        detected_types: result.detected_types,
-        processed_at: new Date().toISOString(),
-      });
-
-    if (error) {
-      console.error('Database save failed:', error);
       throw error;
     }
   }
