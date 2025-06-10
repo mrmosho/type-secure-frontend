@@ -1,5 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { createClient } from '@supabase/supabase-js';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface User {
   id: string;
@@ -31,22 +32,41 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const supabase = createClient(
+    import.meta.env.VITE_SUPABASE_URL,
+    import.meta.env.VITE_SUPABASE_ANON_KEY
+  );
 
   useEffect(() => {
-    // Check if user is logged in via JWT in local storage
-    const token = localStorage.getItem("ts-auth-token");
-    
-    if (token) {
-      // This would be replaced with an actual token validation API call
-      // For now, we'll simulate a logged-in user
-      setUser({
-        id: "1",
-        name: "Test User",
-        email: "user@example.com",
-      });
-    }
-    
-    setIsLoading(false);
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata.name || 'Unknown User',
+          avatarUrl: session.user.user_metadata.avatar_url
+        });
+      }
+      setIsLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata.name || 'Unknown User',
+          avatarUrl: session.user.user_metadata.avatar_url
+        });
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
