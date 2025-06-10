@@ -3,7 +3,9 @@ import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, FileText, FileIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 
 export function FileUpload() {
   const [isUploading, setIsUploading] = useState(false);
@@ -19,7 +21,7 @@ export function FileUpload() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("https://api.type-secure.online/api/detect/file", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/detect/file`, {
           method: "POST",
           body: formData,
         });
@@ -53,36 +55,54 @@ export function FileUpload() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-      'text/csv': ['.csv']
+      'text/plain': ['.txt'],
     },
     maxSize: 10 * 1024 * 1024 // 10MB
   });
 
   return (
-    <div 
-      {...getRootProps()} 
-      className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary/50 transition-colors"
-    >
-      <input {...getInputProps()} />
-      <div className="space-y-4">
-        <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-        {isDragActive ? (
-          <p>Drop the files here...</p>
-        ) : (
-          <p>Drag & drop files here, or click to select</p>
-        )}
-        <p className="text-sm text-muted-foreground">
-          Supports .docx, .xlsx, and .csv files up to 10MB
-        </p>
-        {isUploading && (
-          <div className="space-y-2">
-            <Progress value={progress} />
-            <Loader2 className="h-4 w-4 animate-spin mx-auto" />
-          </div>
-        )}
+    <div className="space-y-6">
+      <div 
+        {...getRootProps()} 
+        className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary/50 transition-colors"
+      >
+        <input {...getInputProps()} />
+        <div className="space-y-4">
+          <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
+          {isDragActive ? (
+            <p>Drop the text file here...</p>
+          ) : (
+            <p>Drag & drop a text file here, or click to select</p>
+          )}
+          <p className="text-sm text-muted-foreground">
+            Currently supporting .txt files up to 10MB
+          </p>
+          {isUploading && (
+            <div className="space-y-2">
+              <Progress value={progress} />
+              <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+            </div>
+          )}
+        </div>
       </div>
+
+      <Card className="p-4 bg-muted/50">
+        <h3 className="font-semibold mb-4 flex items-center gap-2">
+          <FileIcon className="h-4 w-4" />
+          Coming Soon
+          <Badge variant="outline" className="ml-2">Soon™</Badge>
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {['.docx', '.pdf', '.xlsx', '.csv', '.json', '.xml'].map((format) => (
+            <div 
+              key={format}
+              className="p-2 rounded border bg-background/50 text-center text-sm text-muted-foreground"
+            >
+              {format}
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }
