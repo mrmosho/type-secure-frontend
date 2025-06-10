@@ -1,129 +1,163 @@
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LineChart, BarChart } from "@/components/ui/charts";
+import { supabase } from "@/lib/supabase";
+import { Loader2 } from "lucide-react";
 
-import React from "react";
-import StatsCard from "@/components/Dashboard/StatsCard";
-import DetectionChart from "@/components/Dashboard/DetectionChart";
-import { Bell, Lock, Settings, ShieldCheck } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import SystemTray from "@/components/UI/SystemTray";
+interface DashboardData {
+  totalScans: number;
+  sensitiveDetections: number;
+  totalFiles: number;
+  recentScans: Array<{
+    date: string;
+    type: string;
+    is_sensitive: boolean;
+  }>;
+  detectionsByType: {
+    type: string;
+    count: number;
+  }[];
+}
 
-// Mock data for demonstration
-const chartData = [
-  { name: "Jan", personal: 12, financial: 8 },
-  { name: "Feb", personal: 19, financial: 14 },
-  { name: "Mar", personal: 15, financial: 11 },
-  { name: "Apr", personal: 27, financial: 19 },
-  { name: "May", personal: 32, financial: 25 },
-  { name: "Jun", personal: 20, financial: 18 },
-  { name: "Jul", personal: 29, financial: 21 },
-];
+export default function Dashboard() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-const Dashboard: React.FC = () => {
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const [detections, files] = await Promise.all([
+        supabase
+          .from('detections')
+          .select('*')
+          .eq('user_id', user.id),
+        supabase
+          .from('files')
+          .select('*')
+          .eq('user_id', user.id)
+      ]);
+
+      if (detections.error) throw detections.error;
+      if (files.error) throw files.error;
+
+      // Process the data
+      const detectionsByType = detections.data.reduce((acc: any, curr) => {
+        curr.detected_types.forEach((type: string) => {
+          acc[type] = (acc[type] || 0) + 1;
+        });
+        return acc;
+      }, {});
+
+      setData({
+        totalScans: detections.data.length,
+        sensitiveDetections: detections.data.filter(d => d.is_sensitive).length,
+        totalFiles: files.data.length,
+        recentScans: detections.data
+          .slice(-10)
+          .map(scan => ({
+            date: new Date(scan.processed_at).toLocaleDateString(),
+            type: scan.detected_types[0] || 'None',
+            is_sensitive: scan.is_sensitive
+          })),
+        detectionsByType: Object.entries(detectionsByType).map(([type, count]) => ({
+          type,
+          count: count as number
+        }))
+      });
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="text-center p-8">
+        <h2 className="text-2xl font-semibold mb-2">No Data Available</h2>
+        <p className="text-muted-foreground">
+          Start scanning documents to see your analytics here.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <Button
-          className="bg-ts-purple-500 hover:bg-ts-purple-600"
-        >
-          New Scan
-        </Button>
-      </div>
-      
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Total Detections"
-          value="846"
-          icon={<ShieldCheck className="h-4 w-4" />}
-          trend={{ value: 12, isPositive: false }}
-        />
-        <StatsCard
-          title="Protected Files"
-          value="382"
-          icon={<Lock className="h-4 w-4" />}
-          trend={{ value: 8, isPositive: true }}
-        />
-        <StatsCard
-          title="Active Monitors"
-          value="5"
-          description="All systems operational"
-          icon={<Bell className="h-4 w-4" />}
-        />
-        <StatsCard
-          title="Sensitivity Level"
-          value="Medium"
-          description="Last updated 2 days ago"
-          icon={<Settings className="h-4 w-4" />}
-        />
-      </div>
-      
-      <div className="grid gap-6 md:grid-cols-2">
-        <DetectionChart 
-          data={chartData}
-          title="Detection History"
-          description="Data detection trends over the past 7 months"
-        />
-        
+    <div className="space-y-4 p-8">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>System Status</CardTitle>
-            <CardDescription>
-              Current system health and security status
-            </CardDescription>
+            <CardTitle>Total Scans</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="h-3 w-3 rounded-full bg-green-500" />
-                  <span>Active Protection</span>
-                </div>
-                <span className="text-sm text-muted-foreground">Real-time monitoring active</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="h-3 w-3 rounded-full bg-green-500" />
-                  <span>Database Connection</span>
-                </div>
-                <span className="text-sm text-muted-foreground">Connected (low latency)</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="h-3 w-3 rounded-full bg-green-500" />
-                  <span>Encryption Module</span>
-                </div>
-                <span className="text-sm text-muted-foreground">AES-256 ready</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="h-3 w-3 rounded-full bg-green-500" />
-                  <span>JWT Authentication</span>
-                </div>
-                <span className="text-sm text-muted-foreground">Valid session</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="h-3 w-3 rounded-full bg-amber-500" />
-                  <span>Pattern Database</span>
-                </div>
-                <span className="text-sm text-muted-foreground">Update available</span>
-              </div>
-            </div>
-            
-            <Button className="w-full mt-6 bg-ts-purple-500 hover:bg-ts-purple-600">
-              Update Pattern Database
-            </Button>
+            <p className="text-3xl font-bold">{data.totalScans}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Sensitive Detections</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-red-500">
+              {data.sensitiveDetections}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Files Processed</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{data.totalFiles}</p>
           </CardContent>
         </Card>
       </div>
-      
-      <SystemTray detectionCount={3} />
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Scans</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LineChart
+              data={data.recentScans}
+              xField="date"
+              yField="is_sensitive"
+              height={300}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Detections by Type</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <BarChart
+              data={data.detectionsByType}
+              xField="type"
+              yField="count"
+              height={300}
+            />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
-};
-
-export default Dashboard;
+}
