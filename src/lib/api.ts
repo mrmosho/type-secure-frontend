@@ -27,7 +27,7 @@ const API_BASE_URL = 'https://api.type-secure.online';
 export const api = {
   async detect(data: DetectionRequest): Promise<DetectionResponse> {
     try {
-      console.log('🔍 Using API URL:', API_BASE_URL);
+      console.log('🔍 Making detection request:', data);
       
       const response = await fetch(`${API_BASE_URL}/api/detect`, {
         method: 'POST',
@@ -35,15 +35,18 @@ export const api = {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache, no-store, must-revalidate',
         },
+        credentials: 'include', // Add this for CORS
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new APIError(response.status, 'Detection request failed');
+        throw new APIError(response.status, await response.text());
       }
 
       const result = await response.json();
-      return result as DetectionResponse;
+      // Save detection result
+      await this.saveDetectionResult(result);
+      return result;
     } catch (error) {
       console.error('API Error:', error);
       throw error;
@@ -52,6 +55,7 @@ export const api = {
 
   async uploadFile(file: File): Promise<DetectionResponse> {
     try {
+      console.log('📤 Uploading file:', file.name);
       const formData = new FormData();
       formData.append('file', file);
 
@@ -59,27 +63,35 @@ export const api = {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
         },
-        body: formData,
         credentials: 'include',
+        body: formData,
       });
 
+      console.log('📥 Upload response status:', response.status);
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Upload error response:', errorText);
         if (response.status === 413) {
           throw new APIError(413, 'File too large (max 10MB)');
         }
-        throw new APIError(response.status, 'File upload failed');
+        throw new APIError(response.status, errorText || 'File upload failed');
       }
 
       const result = await response.json();
+      console.log('📊 Upload result:', result);
       
-      // Store the result in the database
+      // Store the result in the database with file info
       await this.saveDetectionResult({
         ...result,
         processed_text: `File: ${file.name}`,
+        file_type: file.type,
+        file_size: file.size,
       });
 
-      return result as DetectionResponse;
+      return result;
     } catch (error) {
       console.error('File upload error:', error);
       throw error;
@@ -89,7 +101,15 @@ export const api = {
   async saveDetectionResult(result: DetectionResponse) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!user) {
+        console.warn('No authenticated user found');
+        return;
+      }
+
+      console.log('💾 Saving detection result to database:', {
+        user_id: user.id,
+        result,
+      });
 
       const { error } = await supabase
         .from('detections')
@@ -99,7 +119,11 @@ export const api = {
           is_sensitive: result.is_sensitive,
           confidence: result.confidence,
           detected_types: result.detected_types,
-          processed_at: new Date().toISOString()
+          processed_at: new Date().toISOString(),
+          file_metadata: 'file_type' in result ? {
+            type: result.file_type,
+            size: result.file_size
+          } : null
         });
 
       if (error) {
@@ -107,10 +131,11 @@ export const api = {
         throw error;
       }
 
-      console.log('Detection result saved to database');
+      console.log('✅ Detection result saved successfully');
     } catch (error) {
       console.error('Failed to save detection result:', error);
-      throw error;
+      // Don't throw here - we don't want to fail the entire operation
+      // if database save fails
     }
   }
 };
