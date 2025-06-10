@@ -4,7 +4,8 @@ import { supabase } from '@/lib/supabase';
 const API_BASE_URL = 'https://api.type-secure.online';
 
 interface DetectionRequest {
-  text: string;
+  text?: string;
+  file?: File;
 }
 
 interface DetectionResponse {
@@ -17,13 +18,22 @@ interface DetectionResponse {
 export const api = {
   async detect(data: DetectionRequest): Promise<DetectionResponse> {
     try {
+      let body: FormData | string;
+      const headers: Record<string, string> = {};
+
+      if (data.file) {
+        body = new FormData();
+        body.append('file', data.file);
+      } else {
+        body = JSON.stringify({ text: data.text });
+        headers['Content-Type'] = 'application/json';
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/detect`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Add this for CORS
-        body: JSON.stringify(data),
+        headers,
+        credentials: 'include',
+        body,
       });
 
       if (!response.ok) {
@@ -42,62 +52,20 @@ export const api = {
         throw new Error('Invalid response format from API');
       }
 
-      // Save to database immediately
-      await this.saveDetectionResult(result);
-      return result;
+      // Save to database with appropriate text
+      await this.saveDetectionResult({
+        ...result,
+        processed_text: data.file 
+          ? `File: ${data.file.name}`
+          : result.processed_text,
+      });
 
+      return result;
     } catch (error) {
       console.error('API Error:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Detection failed",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  },
-
-  async uploadFile(file: File): Promise<DetectionResponse> {
-    try {
-      const headers = await this.getAuthHeaders();
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch(`${API_BASE_URL}/api/detect/file`, {
-        method: 'POST',
-        headers: {
-          ...headers,
-          'Accept': 'application/json',
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('File upload failed:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorText
-        });
-        throw new Error(`File upload failed: ${errorText}`);
-      }
-
-      const result = await response.json();
-      
-      if (!this.isValidDetectionResponse(result)) {
-        throw new Error('Invalid response format from API');
-      }
-
-      await this.saveDetectionResult({
-        ...result,
-        processed_text: `File: ${file.name}`,
-      });
-
-      return result;
-    } catch (error) {
-      toast({
-        title: "Upload Failed",
-        description: error instanceof Error ? error.message : "File upload failed",
         variant: "destructive",
       });
       throw error;

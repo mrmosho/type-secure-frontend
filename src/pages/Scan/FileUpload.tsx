@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Upload, Loader2, FileText, FileIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { api } from "@/utils/api";
 
 export function FileUpload() {
   const [isUploading, setIsUploading] = useState(false);
@@ -18,17 +19,7 @@ export function FileUpload() {
 
     for (const file of acceptedFiles) {
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/detect/file`, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) throw new Error("Upload failed");
-
-        const result = await response.json();
+        const result = await api.detect({ file });
         
         toast({
           title: "File Processed",
@@ -40,11 +31,7 @@ export function FileUpload() {
 
         setProgress(100);
       } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Upload Failed",
-          description: error instanceof Error ? error.message : "Failed to process file",
-        });
+        console.error('Upload error:', error);
       }
     }
     

@@ -15,29 +15,22 @@ export function TextInput() {
   const handleDetection = async () => {
     if (!text.trim()) return;
     
-    console.log("🔍 Starting detection for:", text);
     setIsLoading(true);
 
     try {
-      const response = await api.detect({ text });
-      console.log("✅ Detection result:", response);
-      
-      setResult(response);
+      const result = await api.detect({ text });
 
-      if (response.is_sensitive) {
+      setResult(result);
+
+      if (result.is_sensitive) {
         toast({
           variant: "destructive",
           title: "Sensitive Data Detected",
-          description: `Found ${response.detected_types.join(", ")}`,
+          description: `Found ${result.detected_types.join(", ")}`,
         });
       }
     } catch (error) {
-      console.error("❌ Detection error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to scan text",
-      });
+      console.error("Detection error:", error);
     } finally {
       setIsLoading(false);
     }
