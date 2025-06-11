@@ -21,6 +21,7 @@ import AboutUs from "./pages/AboutUs";
 import Scans from "./pages/Scans";
 import Upgrade from "./pages/Upgrade";
 import NotFound from "./pages/NotFound";
+import EncryptionPage from './pages/EncryptionPage';
 
 // Protected route component that redirects to login if not authenticated
 import { useAuth } from "./context/AuthContext";
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/about" element={<AboutUs />} />
               <Route path="/try-us" element={<TryUs />} />
+              <Route path="/encryption" element={<EncryptionPage />} />
               
               {/* Protected Routes with MainLayout */}
               <Route 
