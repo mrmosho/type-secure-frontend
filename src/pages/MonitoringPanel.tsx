@@ -8,6 +8,8 @@ import { Search } from "lucide-react";
 import DetectionItem, { Detection } from "@/components/Monitoring/DetectionItem";
 import SystemTray from "@/components/UI/SystemTray";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { RocketIcon } from "lucide-react";
 
 // Mock data for demonstration
 const mockDetections: Detection[] = [
@@ -213,6 +215,15 @@ const MonitoringPanel: React.FC = () => {
       </Card>
       
       <SystemTray detectionCount={detections.length} />
+      
+      <Alert className="max-w-2xl">
+        <RocketIcon className="h-5 w-5" />
+        <AlertTitle>Coming Soon!</AlertTitle>
+        <AlertDescription>
+          We're working hard to bring you advanced monitoring capabilities. 
+          This feature will be available in the next update. Stay tuned!
+        </AlertDescription>
+      </Alert>
     </div>
   );
 };

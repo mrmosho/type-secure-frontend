@@ -48,9 +48,9 @@ const teamMembers: TeamMember[] = [
     {
       id: 3,
       name: 'Amr Mohamed',
-      role: 'Frontend Developer',
+      role: 'Software Developer',
       image: '/team/amr.jpg',
-      bio: 'Crafting the user interface with a focus on usability and accessibility. Amr is passionate about creating intuitive security tools for non-technical users.',
+      bio: 'Amr is passionate about creating intuitive security tools for non-technical users.',
       links: {
         github: '#',
         linkedin: '#',
@@ -60,9 +60,9 @@ const teamMembers: TeamMember[] = [
     {
       id: 4,
       name: 'Marwan Mohamed',
-      role: 'Security Specialist',
+      role: 'System Design',
       image: '/team/marwan.png',
-      bio: 'Focused on encryption algorithms and detection patterns. Marwan ensures that the system provides reliable protection against evolving security threats.',
+      bio: 'Marwan ensures that the system provides reliable protection against evolving security threats.',
       links: {
         github: '#',
         linkedin: '#',
@@ -72,9 +72,9 @@ const teamMembers: TeamMember[] = [
     {
       id: 5,
       name: 'Ahmed Ali',
-      role: 'Backend Developer',
+      role: 'Back Orchestrator',
       image: '/team/ahmed.jpg',
-      bio: 'Building the robust backend infrastructure that powers our sensitive data detection engine. Ahmed specializes in scalable and secure API development.',
+      bio: 'Ahmed specializes in database setup.',
       links: {
         github: '#',
         linkedin: '#',
