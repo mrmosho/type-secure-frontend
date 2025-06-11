@@ -79,17 +79,6 @@ const App = () => (
               </Route>
               
               <Route 
-                path="/monitoring" 
-                element={
-                  <ProtectedRoute>
-                    <MainLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<MonitoringPanel />} />
-              </Route>
-              
-              <Route 
                 path="/scans" 
                 element={
                   <ProtectedRoute>
